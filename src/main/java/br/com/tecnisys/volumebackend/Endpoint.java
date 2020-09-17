@@ -33,6 +33,11 @@ public class Endpoint {
 
     @PostMapping("/upload")
     public ResponseEntity uploadToLocalFileSystem(@RequestParam("arquivo") MultipartFile file) throws Exception {
+        File diretorio = new File(caminho);
+        if (!diretorio.exists()){
+            diretorio.mkdirs();
+        }
+
         String arquivo = StringUtils.cleanPath(file.getOriginalFilename());
         Path path = Paths.get(caminho + "/" + arquivo);
 
@@ -51,6 +56,10 @@ public class Endpoint {
 
     @GetMapping("/listar")
     public ResponseEntity listar(){
+        File diretorio = new File(caminho);
+        if (!diretorio.exists()){
+            diretorio.mkdirs();
+        }
         Set<Arquivo> arquivos =  Stream.of(new File(caminho).listFiles())
                 .filter(file -> !file.isDirectory())
                 .map(file-> new Arquivo(file.getName(), getFileDownloadUri(file.getName())))
