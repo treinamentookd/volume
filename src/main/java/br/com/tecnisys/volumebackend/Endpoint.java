@@ -12,12 +12,18 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController("/")
 public class Endpoint {
@@ -26,17 +32,31 @@ public class Endpoint {
     private String caminho;
 
     @PostMapping("/upload")
-    public ResponseEntity uploadToLocalFileSystem(@RequestParam("file") MultipartFile file) throws Exception {
+    public ResponseEntity uploadToLocalFileSystem(@RequestParam("arquivo") MultipartFile file) throws Exception {
         String arquivo = StringUtils.cleanPath(file.getOriginalFilename());
         Path path = Paths.get(caminho + "/" + arquivo);
 
         Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+        String fileDownloadUri = getFileDownloadUri(arquivo);
+        return ResponseEntity.ok(fileDownloadUri);
+    }
+
+    private String getFileDownloadUri(String arquivo) {
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/download/")
                 .path(arquivo)
                 .toUriString();
-        return ResponseEntity.ok(fileDownloadUri);
+    }
+
+    @GetMapping("/listar")
+    public ResponseEntity listar(){
+        Set<Arquivo> arquivos =  Stream.of(new File(caminho).listFiles())
+                .filter(file -> !file.isDirectory())
+                .map(file-> new Arquivo(file.getName(), getFileDownloadUri(file.getName())))
+                .collect(Collectors.toSet());
+        return  ResponseEntity.ok(arquivos);
+
     }
 
     @GetMapping("/download/{arquivo:.+}")
