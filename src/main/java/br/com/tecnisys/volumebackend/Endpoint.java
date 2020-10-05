@@ -31,6 +31,11 @@ public class Endpoint {
     @Value("${caminho}")
     private String caminho;
 
+    @GetMapping("/ola")
+    public String ola(){
+        return "Ola mundo";
+    }
+
     @PostMapping("/upload")
     public ResponseEntity uploadToLocalFileSystem(@RequestParam("arquivo") MultipartFile file) throws Exception {
         File diretorio = new File(caminho);
